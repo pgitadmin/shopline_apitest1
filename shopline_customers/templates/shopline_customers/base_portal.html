@@ -74,5 +74,97 @@
   <main class="portal-body">
     {% block content %}{% endblock %}
   </main>
+  <div id="customer-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:40;">
+    <div id="customer-modal" style="max-width:520px;margin:5% auto;background:#fff;border-radius:6px;border:1px solid var(--border);box-shadow:0 20px 40px rgba(0,0,0,0.12);">
+      <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <strong id="customer-modal-title">Member</strong>
+        <button type="button" id="customer-modal-close" style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;">×</button>
+      </div>
+      <div id="customer-modal-body" style="padding:1rem;font-size:0.9rem;">
+        Loading…
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const backdrop = document.getElementById("customer-modal-backdrop");
+      const body = document.getElementById("customer-modal-body");
+      const title = document.getElementById("customer-modal-title");
+      const closeBtn = document.getElementById("customer-modal-close");
+      if (!backdrop || !body || !title || !closeBtn) return;
+
+      function closeModal() {
+        backdrop.style.display = "none";
+      }
+      closeBtn.addEventListener("click", closeModal);
+      backdrop.addEventListener("click", function (e) {
+        if (e.target === backdrop) closeModal();
+      });
+
+      function renderContent(data) {
+        if (!data.ok) {
+          body.innerHTML = "<p style='color:#b91c1c;'>" + (data.error || "Failed to load member info.") + "</p>";
+          return;
+        }
+        title.textContent = data.name || data.email || data.id || "Member";
+        const tags = (data.tags || []).map(function (t) {
+          return "<span style='display:inline-block;padding:0.15em 0.45em;margin:0 0.25em 0.25em 0;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:0.75rem;'>" +
+                 String(t) + "</span>";
+        }).join("");
+
+        const coupons = (data.coupon_items || []).slice(0, 10).map(function (c) {
+          const name = (c.name_translations && Object.values(c.name_translations)[0]) || c.name || "";
+          const code = c.code || c.coupon_code || "";
+          const status = c.status || "";
+          return "<li><strong>" + (name || code || "Coupon") + "</strong>" +
+                 (code ? " <span class='muted'>(" + code + ")</span>" : "") +
+                 (status ? " – <span class='muted'>" + status + "</span>" : "") +
+                 "</li>";
+        }).join("");
+
+        body.innerHTML =
+          "<div class='detail-section' style='border:none;padding:0;'>" +
+            "<div class='detail-row'><span>Email</span><span>" + (data.email || "—") + "</span></div>" +
+            "<div class='detail-row'><span>Membership tier</span><span>" + (data.membership_tier || "—") + "</span></div>" +
+            "<div class='detail-row'><span>Credit balance</span><span>" + (data.credit_balance ?? 0) + "</span></div>" +
+            "<div class='detail-row'><span>Member points</span><span>" + (data.member_point_balance ?? 0) + "</span></div>" +
+          "</div>" +
+          "<div style='margin-top:0.75rem;'>" +
+            "<div class='muted' style='margin-bottom:0.25rem;'>Tags</div>" +
+            (tags || "<span class='muted'>No tags</span>") +
+          "</div>" +
+          "<div style='margin-top:0.75rem;'>" +
+            "<div class='muted' style='margin-bottom:0.25rem;'>Coupons</div>" +
+            (coupons ? "<ul style='margin:0;padding-left:1.1rem;font-size:0.85rem;'>" + coupons + "</ul>" : "<span class='muted'>No coupons</span>") +
+          "</div>";
+      }
+
+      function attachHandlers() {
+        const links = document.querySelectorAll(".customer-name-link[data-customer-id]");
+        links.forEach(function (el) {
+          el.addEventListener("click", function (e) {
+            e.preventDefault();
+            const cid = el.getAttribute("data-customer-id");
+            if (!cid) return;
+            backdrop.style.display = "block";
+            body.textContent = "Loading…";
+            title.textContent = "Member";
+            fetch("/portal/customers/" + encodeURIComponent(cid) + "/quick-view/")
+              .then(function (r) { return r.json(); })
+              .then(renderContent)
+              .catch(function () {
+                body.innerHTML = "<p style='color:#b91c1c;'>Failed to load member info.</p>";
+              });
+          });
+        });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", attachHandlers);
+      } else {
+        attachHandlers();
+      }
+    })();
+  </script>
 </body>
 </html>

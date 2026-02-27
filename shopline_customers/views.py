@@ -6,7 +6,7 @@ import logging
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
 from .services import ShoplineAPIClient
 from .services.shopline_client import ShoplineAPIError
@@ -123,6 +123,58 @@ def customer_detail(request: HttpRequest, customer_id: str) -> HttpResponse:
     return render(request, "shopline_customers/customer_detail.html", {
         "customer": customer,
     })
+
+
+@staff_member_required
+@require_GET
+def customer_quick_view(request: HttpRequest, customer_id: str) -> JsonResponse:
+    """
+    Lightweight JSON for modal pop-up: tags, membership summary, coupons.
+    """
+    if not getattr(settings, "SHOPLINE_ACCESS_TOKEN", ""):
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "SHOPLINE_ACCESS_TOKEN is not set.",
+            },
+            status=500,
+        )
+
+    client = _get_client()
+    try:
+        customer = client.get_customer(customer_id)
+        promotions = client.get_customer_promotions(customer_id)
+    except ShoplineAPIError as e:
+        status = getattr(e, "status_code", 500) or 500
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": str(e),
+                "status_code": status,
+            },
+            status=status,
+        )
+
+    tier = customer.get("membership_tier")
+    if tier and isinstance(tier.get("name_translations"), dict):
+        names = tier["name_translations"]
+        membership_tier_display = next(iter(names.values()), None) or tier.get("id", "")
+    else:
+        membership_tier_display = tier.get("id", "") if tier else ""
+
+    payload = {
+        "ok": True,
+        "id": customer.get("id"),
+        "name": customer.get("name"),
+        "email": customer.get("email"),
+        "tags": customer.get("tags") or [],
+        "credit_balance": customer.get("credit_balance"),
+        "member_point_balance": customer.get("member_point_balance"),
+        "membership_tier": membership_tier_display,
+        "is_member": customer.get("is_member"),
+        "coupon_items": (promotions or {}).get("items", []) if isinstance(promotions, dict) else promotions,
+    }
+    return JsonResponse(payload)
 
 
 @staff_member_required

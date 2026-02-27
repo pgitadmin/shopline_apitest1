@@ -38,7 +38,17 @@
       <tbody>
         {% for c in customers %}
         <tr>
-          <td>{{ c.name|default:"—" }}</td>
+          <td>
+            {% if c.id %}
+              <button type="button"
+                      class="customer-name-link"
+                      data-customer-id="{{ c.id }}">
+                {{ c.name|default:"—" }}
+              </button>
+            {% else %}
+              {{ c.name|default:"—" }}
+            {% endif %}
+          </td>
           <td>{{ c.email|default:"—" }}</td>
           <td>
             {% if c.is_member %}

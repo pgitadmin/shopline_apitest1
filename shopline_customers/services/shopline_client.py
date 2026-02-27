@@ -137,3 +137,25 @@ class ShoplineAPIClient:
             if value is not None:
                 params[key] = value
         return self._request("GET", "/customers/search", params=params)
+
+    def get_customer_promotions(
+        self,
+        customer_id: str,
+        status: Optional[str] = None,
+        platform: Optional[str] = None,
+        **kwargs: Any,
+    ) -> dict:
+        """
+        GET /v1/customers/:customer_id/promotions — promotions/coupons for a customer.
+
+        The official docs call this "Get Customer Promotions".
+        """
+        params: dict[str, Any] = {}
+        if status:
+            params["status"] = status
+        if platform:
+            params["platform"] = platform
+        for key, value in kwargs.items():
+            if value is not None:
+                params[key] = value
+        return self._request("GET", f"/customers/{customer_id}/promotions", params=params or None)
