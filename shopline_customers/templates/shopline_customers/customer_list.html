@@ -1,0 +1,82 @@
+{% extends "shopline_customers/base_portal.html" %}
+
+{% block title %}Customers – Shopline Portal{% endblock %}
+
+{% block content %}
+  <h2 style="margin-top:0;">Customers &amp; membership</h2>
+
+  <form method="get" action="{% url 'shopline_customers:customer_list' %}" class="filters">
+    <input type="text" name="query" value="{{ query }}" placeholder="Search name, email, phone…" size="30">
+    <select name="is_member">
+      <option value="">All</option>
+      <option value="true" {% if is_member_filter == "true" %}selected{% endif %}>Members only</option>
+      <option value="false" {% if is_member_filter == "false" %}selected{% endif %}>Non-members</option>
+    </select>
+    <select name="per_page">
+      <option value="24" {% if per_page == 24 %}selected{% endif %}>24 per page</option>
+      <option value="50" {% if per_page == 50 %}selected{% endif %}>50 per page</option>
+      <option value="100" {% if per_page == 100 %}selected{% endif %}>100 per page</option>
+    </select>
+    <button type="submit">Apply</button>
+  </form>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Member</th>
+          <th>Membership tier</th>
+          <th>Orders</th>
+          <th>Total spent</th>
+          <th>Credit balance</th>
+          <th>Registered</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td>{{ c.name|default:"—" }}</td>
+          <td>{{ c.email|default:"—" }}</td>
+          <td>
+            {% if c.is_member %}
+              <span class="badge badge-member">Member</span>
+            {% else %}
+              <span class="badge badge-not-member">No</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.membership_tier %}
+              {% if c.membership_tier.name_translations %}{% for k, v in c.membership_tier.name_translations.items %}{{ v }}{% endfor %}{% else %}{{ c.membership_tier.id }}{% endif %}
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </td>
+          <td>{{ c.order_count|default:0 }}</td>
+          <td>{{ c.orders_total_sum.label|default:"—" }}</td>
+          <td>{{ c.credit_balance|default:0 }}</td>
+          <td class="muted">{{ c.registered_at|default:""|slice:":10" }}</td>
+          <td><a href="{% url 'shopline_customers:customer_detail' c.id %}">View</a></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="muted">No customers found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <span class="muted">{{ total_count }} total</span>
+    {% if current_page > 1 %}
+      <a href="?page={{ current_page|add:"-1" }}&per_page={{ per_page }}{% if query %}&query={{ query|urlencode }}{% endif %}{% if is_member_filter %}&is_member={{ is_member_filter }}{% endif %}">Previous</a>
+    {% endif %}
+    <span class="current">Page {{ current_page }} of {{ total_pages }}</span>
+    {% if current_page < total_pages %}
+      <a href="?page={{ current_page|add:"1" }}&per_page={{ per_page }}{% if query %}&query={{ query|urlencode }}{% endif %}{% if is_member_filter %}&is_member={{ is_member_filter }}{% endif %}">Next</a>
+    {% endif %}
+  </div>
+{% endblock %}

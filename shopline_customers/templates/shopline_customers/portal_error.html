@@ -1,0 +1,12 @@
+{% extends "shopline_customers/base_portal.html" %}
+
+{% block title %}Error – Shopline Portal{% endblock %}
+
+{% block content %}
+  <div class="error-box">
+    <strong>{{ error_title }}</strong>
+    <p>{{ error_message }}</p>
+    {% if status_code %}<p class="muted">HTTP {{ status_code }}</p>{% endif %}
+  </div>
+  <p><a href="{% url 'shopline_customers:customer_list' %}">← Back to customers</a></p>
+{% endblock %}

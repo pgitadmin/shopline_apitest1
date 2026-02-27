@@ -1,0 +1,63 @@
+{% extends "shopline_customers/base_portal.html" %}
+
+{% block title %}{{ customer.name|default:customer.id }} – Shopline Portal{% endblock %}
+
+{% block content %}
+  <p style="margin-top:0;"><a href="{% url 'shopline_customers:customer_list' %}">← Back to customers</a></p>
+  <h2 style="margin-top:0;">{{ customer.name|default:customer.email|default:customer.id }}</h2>
+
+  <div class="detail-grid">
+    <div class="detail-section">
+      <h3>Profile</h3>
+      <div class="detail-row"><span>ID</span><span class="muted">{{ customer.id }}</span></div>
+      <div class="detail-row"><span>Name</span><span>{{ customer.name|default:"—" }}</span></div>
+      <div class="detail-row"><span>Email</span><span>{{ customer.email|default:"—" }}</span></div>
+      <div class="detail-row"><span>Mobile</span><span>{{ customer.mobile_phone|default:"—" }} {% if customer.mobile_phone_country_calling_code %}({{ customer.mobile_phone_country_calling_code }}){% endif %}</span></div>
+      <div class="detail-row"><span>Locale</span><span>{{ customer.locale_code|default:"—" }}</span></div>
+      <div class="detail-row"><span>Created</span><span>{{ customer.created_at|default:"—" }}</span></div>
+      <div class="detail-row"><span>Registered</span><span>{{ customer.registered_at|default:"—" }}</span></div>
+      <div class="detail-row"><span>Created by</span><span>{{ customer.created_by|default:"—" }}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Membership</h3>
+      <div class="detail-row"><span>Is member</span><span>{% if customer.is_member %}Yes{% else %}No{% endif %}</span></div>
+      <div class="detail-row"><span>Membership tier</span><span>{{ customer.membership_tier_display|default:"—" }}</span></div>
+      <div class="detail-row"><span>Tier expires</span><span>{{ customer.tier_expires_at|default:"—" }}</span></div>
+      <div class="detail-row"><span>Member points</span><span>{{ customer.member_point_balance|default:0 }}</span></div>
+      <div class="detail-row"><span>Credit balance</span><span>{{ customer.credit_balance|default:0 }}</span></div>
+      <div class="detail-row"><span>Blacklisted</span><span>{% if customer.is_blacklisted %}Yes{% else %}No{% endif %}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Orders</h3>
+      <div class="detail-row"><span>Order count</span><span>{{ customer.order_count|default:0 }}</span></div>
+      <div class="detail-row"><span>Orders total</span><span>{{ customer.orders_total_sum.label|default:"—" }}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Marketing &amp; subscription</h3>
+      <div class="detail-row"><span>Marketing email</span><span>{% if customer.is_subscribed_marketing_email %}Subscribed{% else %}No{% endif %}</span></div>
+      <div class="detail-row"><span>Subscribed types</span><span>{{ customer.subscribed_email_types|join:", "|default:"—" }}</span></div>
+      {% if customer.subscriptions %}
+      <div class="detail-row"><span>Subscriptions</span><span>{{ customer.subscriptions }}</span></div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if customer.delivery_addresses %}
+  <div class="detail-section" style="margin-top:1rem;">
+    <h3>Delivery addresses</h3>
+    {% for addr in customer.delivery_addresses %}
+    <div class="detail-row">{{ addr.recipient_name|default:"" }} — {{ addr.address_1|default:"" }} {{ addr.city|default:"" }} {{ addr.country_code|default:"" }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if customer.memo %}
+  <div class="detail-section" style="margin-top:1rem;">
+    <h3>Memo</h3>
+    <p>{{ customer.memo }}</p>
+  </div>
+  {% endif %}
+{% endblock %}
