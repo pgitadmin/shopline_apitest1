@@ -5,6 +5,7 @@
 {% block content %}
   <p style="margin-top:0;"><a href="{% url 'shopline_customers:customer_list' %}">← Back to customers</a></p>
   <h2 style="margin-top:0;">{{ customer.name|default:customer.email|default:customer.id }}</h2>
+  <p class="muted" style="margin-top:0.25rem;margin-bottom:1rem;">ID: {{ customer.id }}</p>
 
   <div class="detail-grid">
     <div class="detail-section">

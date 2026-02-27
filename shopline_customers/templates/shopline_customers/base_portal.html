@@ -35,9 +35,10 @@
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 6px;
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
     th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
     th { font-weight: 600; background: var(--bg); font-size: 0.875rem; }
     tr:last-child td { border-bottom: none; }
@@ -59,6 +60,20 @@
     .detail-section h3 { margin: 0 0 0.75rem; font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase; }
     .detail-row { display: flex; justify-content: space-between; padding: 0.25rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
     .detail-row:last-child { border-bottom: none; }
+    .customer-name-link {
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      color: var(--link);
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+    }
+    .customer-name-link:hover {
+      color: var(--link-hover);
+      text-decoration: underline;
+    }
   </style>
   {% block extra_css %}{% endblock %}
 </head>
@@ -113,9 +128,19 @@
         }).join("");
 
         const coupons = (data.coupon_items || []).slice(0, 10).map(function (c) {
-          const name = (c.name_translations && Object.values(c.name_translations)[0]) || c.name || "";
-          const code = c.code || c.coupon_code || "";
-          const status = c.status || "";
+          var nameTranslations = c && c.name_translations;
+          var firstName = "";
+          if (nameTranslations) {
+            for (var key in nameTranslations) {
+              if (Object.prototype.hasOwnProperty.call(nameTranslations, key)) {
+                firstName = nameTranslations[key];
+                break;
+              }
+            }
+          }
+          var name = firstName || c.name || "";
+          var code = c.code || c.coupon_code || "";
+          var status = c.status || "";
           return "<li><strong>" + (name || code || "Coupon") + "</strong>" +
                  (code ? " <span class='muted'>(" + code + ")</span>" : "") +
                  (status ? " – <span class='muted'>" + status + "</span>" : "") +
@@ -124,10 +149,11 @@
 
         body.innerHTML =
           "<div class='detail-section' style='border:none;padding:0;'>" +
+            "<div class='detail-row'><span>ID</span><span class='muted'>" + (data.id || "—") + "</span></div>" +
             "<div class='detail-row'><span>Email</span><span>" + (data.email || "—") + "</span></div>" +
             "<div class='detail-row'><span>Membership tier</span><span>" + (data.membership_tier || "—") + "</span></div>" +
-            "<div class='detail-row'><span>Credit balance</span><span>" + (data.credit_balance ?? 0) + "</span></div>" +
-            "<div class='detail-row'><span>Member points</span><span>" + (data.member_point_balance ?? 0) + "</span></div>" +
+            "<div class='detail-row'><span>Credit balance</span><span>" + (data.credit_balance != null ? data.credit_balance : 0) + "</span></div>" +
+            "<div class='detail-row'><span>Member points</span><span>" + (data.member_point_balance != null ? data.member_point_balance : 0) + "</span></div>" +
           "</div>" +
           "<div style='margin-top:0.75rem;'>" +
             "<div class='muted' style='margin-bottom:0.25rem;'>Tags</div>" +
