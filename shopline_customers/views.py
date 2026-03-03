@@ -99,6 +99,7 @@ def customer_detail(request: HttpRequest, customer_id: str) -> HttpResponse:
             customer_id,
             include_fields=["subscription", "referrer_data"],
         )
+        promotions = client.get_customer_promotions(customer_id)
     except ShoplineAPIError as e:
         if getattr(e, "status_code", None) == 404:
             return render(request, "shopline_customers/portal_error.html", {
@@ -120,8 +121,13 @@ def customer_detail(request: HttpRequest, customer_id: str) -> HttpResponse:
     else:
         customer["membership_tier_display"] = tier.get("id", "") if tier else ""
 
+    promotion_items = []
+    if isinstance(promotions, dict):
+        promotion_items = promotions.get("items") or []
+
     return render(request, "shopline_customers/customer_detail.html", {
         "customer": customer,
+        "promotions": promotion_items,
     })
 
 

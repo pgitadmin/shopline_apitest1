@@ -44,6 +44,44 @@
       <div class="detail-row"><span>Subscriptions</span><span>{{ customer.subscriptions }}</span></div>
       {% endif %}
     </div>
+
+    <div class="detail-section">
+      <h3>Tags</h3>
+      {% if customer.tags %}
+        <div>
+          {% for t in customer.tags %}
+            <span style="display:inline-block;padding:0.15em 0.45em;margin:0 0.25em 0.25em 0;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:0.75rem;">{{ t }}</span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <span class="muted">No tags</span>
+      {% endif %}
+    </div>
+
+    <div class="detail-section">
+      <h3>Coupons</h3>
+      {% if promotions %}
+        <ul style="margin:0;padding-left:1.1rem;font-size:0.875rem;">
+          {% for p in promotions|slice:":20" %}
+            <li>
+              <strong>
+                {% if p.name_translations %}
+                  {% for k, v in p.name_translations.items %}{{ v }}{% endfor %}
+                {% elif p.name %}
+                  {{ p.name }}
+                {% else %}
+                  Coupon
+                {% endif %}
+              </strong>
+              {% if p.code %}<span class="muted"> ({{ p.code }})</span>{% endif %}
+              {% if p.status %}<span class="muted"> — {{ p.status }}</span>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <span class="muted">No coupons</span>
+      {% endif %}
+    </div>
   </div>
 
   {% if customer.delivery_addresses %}
