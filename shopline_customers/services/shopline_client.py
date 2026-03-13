@@ -174,3 +174,18 @@ class ShoplineAPIClient:
             "per_page": min(max(int(per_page), 1), 999),
         }
         return self._request("GET", f"/customers/{customer_id}/member_points", params=params)
+
+    def get_customer_store_credits(
+        self,
+        customer_id: str,
+        page: int = 1,
+        per_page: int = 24,
+    ) -> dict:
+        """
+        GET /v1/customers/:id/store_credits — store credit history for a customer.
+        """
+        params: dict[str, Any] = {
+            "page": page,
+            "per_page": min(max(int(per_page), 1), 999),
+        }
+        return self._request("GET", f"/customers/{customer_id}/store_credits", params=params)

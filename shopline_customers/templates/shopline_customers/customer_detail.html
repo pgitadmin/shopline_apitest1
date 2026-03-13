@@ -25,12 +25,16 @@
       <div class="detail-row"><span>Is member</span><span>{% if customer.is_member %}Yes{% else %}No{% endif %}</span></div>
       <div class="detail-row"><span>Membership tier</span><span>{{ customer.membership_tier_display|default:"—" }}</span></div>
       <div class="detail-row"><span>Tier expires</span><span>{{ customer.tier_expires_at|default:"—" }}</span></div>
-      <div class="detail-row"><span>Member points</span><span>{{ customer.member_point_balance|default:0 }}</span></div>
+      <div class="detail-row"><span>Member Points</span><span>{{ customer.member_point_balance|default:0 }}</span></div>
       <div class="detail-row">
-        <span>Points history</span>
-        <span><a href="{% url 'shopline_customers:customer_points_summary' customer.id %}">View earn/burn summary</a></span>
+        <span>Points History</span>
+        <span><a href="{% url 'shopline_customers:customer_points_summary' customer.id %}">View Earn/Burn Summary</a></span>
       </div>
-      <div class="detail-row"><span>Credit balance</span><span>{{ customer.credit_balance|default:0 }}</span></div>
+      <div class="detail-row"><span>Store Credit</span><span>{{ customer.credit_balance|default:0 }}</span></div>
+      <div class="detail-row">
+        <span>Store Credit History</span>
+        <span><a href="{% url 'shopline_customers:customer_store_credit_summary' customer.id %}">View Store Credit History</a></span>
+      </div>
       <div class="detail-row"><span>Blacklisted</span><span>{% if customer.is_blacklisted %}Yes{% else %}No{% endif %}</span></div>
     </div>
 

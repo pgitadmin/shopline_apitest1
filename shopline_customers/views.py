@@ -255,6 +255,76 @@ def customer_points_summary(request: HttpRequest, customer_id: str) -> HttpRespo
 
 @staff_member_required
 @require_GET
+def customer_store_credit_summary(request: HttpRequest, customer_id: str) -> HttpResponse:
+    """
+    Store Credit summary & history for a customer.
+
+    Data source: GET /v1/customers/:id/store_credits
+    """
+    if not getattr(settings, "SHOPLINE_ACCESS_TOKEN", ""):
+        return render(request, "shopline_customers/portal_error.html", {
+            "error_title": "Configuration missing",
+            "error_message": "SHOPLINE_ACCESS_TOKEN is not set.",
+        })
+
+    page_num = request.GET.get("page", "1")
+    per_page = request.GET.get("per_page", "24")
+    try:
+        page_num = max(1, int(page_num))
+        per_page = min(999, max(1, int(per_page)))
+    except ValueError:
+        page_num = 1
+        per_page = 24
+
+    client = _get_client()
+    try:
+        customer = client.get_customer(customer_id, fields=["id", "name", "email", "credit_balance"])
+        data = client.get_customer_store_credits(customer_id, page=page_num, per_page=per_page)
+    except ShoplineAPIError as e:
+        if getattr(e, "status_code", None) == 404:
+            return render(request, "shopline_customers/portal_error.html", {
+                "error_title": "Customer not found",
+                "error_message": f"No customer with ID {customer_id}.",
+            }, status=404)
+        logger.exception("Shopline API error in customer_store_credit_summary")
+        return render(request, "shopline_customers/portal_error.html", {
+            "error_title": "Shopline API error",
+            "error_message": str(e),
+            "status_code": getattr(e, "status_code", None),
+        })
+
+    items = data.get("items") or []
+    pagination = data.get("pagination") or {}
+    total_pages = pagination.get("total_pages", 1)
+    current_page = pagination.get("current_page", page_num)
+
+    earned_total = 0
+    burned_total = 0
+    for row in items:
+        try:
+            value = int(row.get("value") or 0)
+        except (TypeError, ValueError):
+            value = 0
+        if row.get("is_redeem") is True:
+            burned_total += value
+        else:
+            earned_total += value
+
+    return render(request, "shopline_customers/customer_store_credit_summary.html", {
+        "customer": customer,
+        "items": items,
+        "pagination": pagination,
+        "current_page": current_page,
+        "total_pages": total_pages,
+        "per_page": per_page,
+        "earned_total": earned_total,
+        "burned_total": burned_total,
+        "net_total": earned_total - burned_total,
+    })
+
+
+@staff_member_required
+@require_GET
 def portal_home(request: HttpRequest) -> HttpResponse:
     """Redirect to customer list."""
     return redirect("shopline_customers:customer_list")
