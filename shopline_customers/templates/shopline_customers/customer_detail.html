@@ -26,6 +26,10 @@
       <div class="detail-row"><span>Membership tier</span><span>{{ customer.membership_tier_display|default:"—" }}</span></div>
       <div class="detail-row"><span>Tier expires</span><span>{{ customer.tier_expires_at|default:"—" }}</span></div>
       <div class="detail-row"><span>Member points</span><span>{{ customer.member_point_balance|default:0 }}</span></div>
+      <div class="detail-row">
+        <span>Points history</span>
+        <span><a href="{% url 'shopline_customers:customer_points_summary' customer.id %}">View earn/burn summary</a></span>
+      </div>
       <div class="detail-row"><span>Credit balance</span><span>{{ customer.credit_balance|default:0 }}</span></div>
       <div class="detail-row"><span>Blacklisted</span><span>{% if customer.is_blacklisted %}Yes{% else %}No{% endif %}</span></div>
     </div>

@@ -1,0 +1,122 @@
+{% extends "shopline_customers/base_portal.html" %}
+
+{% block title %}Points – {{ customer.name|default:customer.id }}{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .kpi-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+    .kpi .label { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    .kpi .value { font-size: 1.35rem; font-weight: 700; margin-top: 0.35rem; }
+    .pill { display:inline-block; padding:0.15em 0.5em; border-radius:999px; font-size:0.75rem; border:1px solid var(--border); }
+    .pill-earn { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
+    .pill-burn { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <p style="margin-top:0;">
+    <a href="{% url 'shopline_customers:customer_detail' customer.id %}">← Back to customer</a>
+    <span class="muted" style="margin-left:0.5rem;">ID: {{ customer.id }}</span>
+  </p>
+
+  <h2 style="margin-top:0;">Earn / Burn points summary</h2>
+  <p class="muted" style="margin-top:0.25rem;margin-bottom:0.75rem;">
+    {{ customer.name|default:customer.email|default:customer.id }}
+    · Current balance: {{ customer.member_point_balance|default:0 }}
+  </p>
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="label">Earned (this page)</div>
+      <div class="value" style="color:#166534;">+{{ earned_total }}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Redeemed / Burned (this page)</div>
+      <div class="value" style="color:#991b1b;">-{{ burned_total }}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Net (this page)</div>
+      <div class="value">{{ net_total }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <table style="min-width: 980px;">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Value</th>
+          <th>Balance after</th>
+          <th>Remarks</th>
+          <th>Order</th>
+          <th>Expires</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in items %}
+          <tr>
+            <td>
+              {% if r.is_redeem %}
+                <span class="pill pill-burn">Burn</span>
+              {% else %}
+                <span class="pill pill-earn">Earn</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if r.is_redeem %}-{% else %}+{% endif %}{{ r.value|default:0 }}
+            </td>
+            <td>{{ r.point_balance|default:"—" }}</td>
+            <td>
+              {% if r.remarks %}
+                {{ r.remarks }}
+              {% elif r.remark %}
+                {{ r.remark }}
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if r.order_number %}
+                {{ r.order_number }}
+              {% elif r.order_id %}
+                <span class="muted">{{ r.order_id }}</span>
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td class="muted">
+              {% if r.expire_at %}
+                {{ r.expire_at|slice:":10" }}
+              {% elif r.expired_at %}
+                {{ r.expired_at|slice:":10" }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td class="muted">{{ r.created_at|default:""|slice:":19" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="muted">No point history found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <span class="muted">
+      Page {{ current_page }} of {{ total_pages }}
+      {% if pagination.total_count %}· {{ pagination.total_count }} total{% endif %}
+    </span>
+    {% if current_page > 1 %}
+      <a href="?page={{ current_page|add:"-1" }}&per_page={{ per_page }}">Previous</a>
+    {% endif %}
+    {% if current_page < total_pages %}
+      <a href="?page={{ current_page|add:"1" }}&per_page={{ per_page }}">Next</a>
+    {% endif %}
+  </div>
+{% endblock %}
+

@@ -159,3 +159,18 @@ class ShoplineAPIClient:
             if value is not None:
                 params[key] = value
         return self._request("GET", f"/customers/{customer_id}/promotions", params=params or None)
+
+    def get_customer_member_points(
+        self,
+        customer_id: str,
+        page: int = 1,
+        per_page: int = 24,
+    ) -> dict:
+        """
+        GET /v1/customers/:id/member_points — member points history for a customer.
+        """
+        params: dict[str, Any] = {
+            "page": page,
+            "per_page": min(max(int(per_page), 1), 999),
+        }
+        return self._request("GET", f"/customers/{customer_id}/member_points", params=params)
